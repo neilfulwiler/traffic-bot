@@ -1,0 +1,5 @@
+host: localhost
+port: 12345
+reads_per_second: 1
+writes_per_second: 10
+writes_percent_unique: 0.0

@@ -1,11 +1,11 @@
 import unittest
-import traffic # the module under test
-import mock
-import opentsdb
+import traffic.controller # the module under test
+from api.backend import MockBackendApi
+from monitoring import opentsdb
 
 import time
 
-class TestTraffic(unittest.TestCase):
+class TestController(unittest.TestCase):
     def test_stop_traffic(self):
         config = {
                 'host' : 'doesnt matter',
@@ -15,9 +15,11 @@ class TestTraffic(unittest.TestCase):
                 'writes_percent_unique' : 1234
                 }
 
-        api = mock.BackendApi()
+        api = MockBackendApi()
 
-        traffic_controller = traffic.generate_traffic(config, api)
+        traffic_controller = traffic.controller.TrafficController(
+                rps=0, wps=100, writes_percent_unique=1.0, api=api, monitor=opentsdb.ConsoleMonitor)
+        traffic_controller.start()
 
         start = time.time()
         traffic_controller.stop()
@@ -33,9 +35,12 @@ class TestTraffic(unittest.TestCase):
                 'writes_percent_unique' : 1234
                 }
 
-        api = mock.BackendApi()
+        api = MockBackendApi()
 
-        traffic_controller = traffic.generate_traffic(config, api)
+        traffic_controller = traffic.controller.TrafficController(
+                rps=0, wps=100, writes_percent_unique=1.0, api=api, monitor=opentsdb.ConsoleMonitor)
+        traffic_controller.start()
+
         time.sleep(3)
         traffic_controller.stop()
 
