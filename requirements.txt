@@ -1,0 +1,4 @@
+PyYAML==3.11
+bottle==0.12.7
+requests==2.2.1
+wsgiref==0.1.2
