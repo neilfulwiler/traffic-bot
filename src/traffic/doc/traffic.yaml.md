@@ -1,0 +1,5 @@
+- host: backend host
+- port: backend port
+- reads_per_second: reads per second
+- writes_per_second: writes per second
+- writes_percent_uniques: percent of writes that are unique users
