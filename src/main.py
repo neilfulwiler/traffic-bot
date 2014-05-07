@@ -13,11 +13,13 @@ import time
 import sys
 import os
 import yaml
-import controller
-import backend
-import opentsdb
 from functools import partial
 from kazoo.client import KazooClient
+
+from controller import TrafficController
+import backend
+import opentsdb
+import utils
 
 ZK_NAMESPACE = '/traffic'
 
@@ -39,6 +41,7 @@ def generate_traffic(zk):
         /traffic/rps
         /traffic/wps
         /traffic/host
+        /traffic/verify # attempts to verify the results
 
     when these hosts are updated the corresponding
     functionality is similarly updated
@@ -47,7 +50,7 @@ def generate_traffic(zk):
     zk.start()
 
     monitor = partial(opentsdb.ConsoleMonitor, verbose=True)
-    controller = controller.TrafficController(monitor)
+    controller = TrafficController(monitor)
 
     # stop the controller on interrupt
     import signal
@@ -65,20 +68,26 @@ def generate_traffic(zk):
 
     @zk.DataWatch(ZK_NAMESPACE + '/rps')
     @utils.safe('updating rps') # just catches exceptions
-    def update_rps(data, stat):
+    def update_rps(data, stat, event):
         controller.set_rps(int(data))
 
     @zk.DataWatch(ZK_NAMESPACE + '/wps')
     @utils.safe('updating wps') # just catches exceptions
-    def update_wps(data, stat):
+    def update_wps(data, stat, event):
         controller.set_wps(int(data))
 
     @zk.DataWatch(ZK_NAMESPACE + '/host')
     @utils.safe('updating host') # just catches exceptions
-    def update_host(data, stat):
+    def update_host(data, stat, event):
         host = data
         remote = backend.RemoteBackend(host)
         controller.set_backend(backend.VerifiedBackend(remote))
+
+    @zk.DataWatch(ZK_NAMESPACE + '/verify')
+    @utils.safe('setting verification') # just catches exceptions
+    def update_verify(data, stat, event):
+        host = data
+        controller.get_backend().set_verified(bool(data))
 
     # the join was to be called in a loop otherwise
     # the main thread blocks and signals don't get through

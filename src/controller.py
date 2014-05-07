@@ -17,7 +17,11 @@ class TrafficController(object):
         self.running = True
         self.monitor = monitor
 
-        self.wps = self.rps = self.api = None
+        # these will be defaulted
+        self.wps = self.rps = 0
+
+        # this needs to be set before start()
+        self.backend = None
 
     def get_wps(self):
         return self.wps
@@ -25,18 +29,21 @@ class TrafficController(object):
     def get_rps(self):
         return self.rps
 
+    def get_backend(self):
+        return self.backend
+
     def set_wps(self, wps):
         self.wps = wps
 
     def set_rps(self, rps):
         self.rps = rps
 
-    def set_api(self, api):
-        self.api = api
+    def set_backend(self, backend):
+        self.backend = backend
 
 
     def start(self):
-        assert None not in [self.api, self.rps, self.wps]
+        if self.backend is None: raise Exception('Please call set_backend first')
 
         variations = range(VARIATIONS_PER_EXPERIMENT)
 
@@ -53,7 +60,7 @@ class TrafficController(object):
                 user = random.choice(list(self.users))
 
             try:
-                self.api.log(variation, user)
+                self.backend.log(variation, user)
             except Exception as e:
                 print '[ERROR]' * 3, 'caught exception trying to write: %s' % e, '[ERROR]' * 3
 
@@ -62,7 +69,7 @@ class TrafficController(object):
         def read():
             variation = random.choice(variations)
             try:
-                self.api.results(variation)
+                self.backend.results(variation)
             except Exception as e:
                 print '[ERROR]' * 3, 'caught exception trying to read: %s' % e, '[ERROR]' * 3
 

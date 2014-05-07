@@ -19,15 +19,28 @@ class RemoteBackend(object):
         self._rest('log/%d/%s' % (variation, user))
 
     def results(self, variation):
-        return self._rest('results/%d' % variation).json()['results']
+        response = self._rest('results/%d' % variation)
+        try:
+            return response.json()['results']
+        except:
+            print 'Failed to parse response into json. text value: %s' % response.text
+            raise
 
     def _rest(self, path):
         return requests.get('http://%s/%s' % (self.host, path))
 
 class VerifiedBackend(object):
+    """
+    a bit of a misnomer. If you call set_verified(false)
+    it will just stop verifying
+    """
     def __init__(self, base_backend):
         self.base_backend = base_backend
         self.verifier = InMemoryBackend()
+        self.verified = True
+
+    def set_verified(self, verified):
+        self.verified = verified
 
     def log(self, variation, user):
         self.verifier.log(variation, user)
@@ -38,7 +51,7 @@ class VerifiedBackend(object):
         actual = self.base_backend.results(variation)
 
         # is this check ok?
-        if len(expected) != len(actual):
+        if self.verified and len(expected) != len(actual):
             raise VerificationError(variation, expected, actual)
 
 class MockBackend(object):

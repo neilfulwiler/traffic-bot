@@ -1,4 +1,5 @@
 import time
+from decorator import decorator
 
 SLEEP_PENALTY = .0001 # penalty in second for sleeping / context switching, etc.
 UPDATE_EVERY_N_SECONDS = 2
@@ -12,12 +13,14 @@ class safe(object):
         self.function_description = function_description
 
     def __call__(self, f):
-        def wrapped_f(*args, **kwargs):
+        def wrapped_f(func, *args, **kwargs):
             try:
-                f(*args, **kwargs)
+                print args
+                print kwargs
+                func(*args, **kwargs)
             except Exception as e:
                 print 'ERROR [%s]: %s' % (self.function_description, e)
-        return wrapped_f
+        return decorator(wrapped_f, f)
 
 class loop_at_target_frequency(object):
     """
@@ -33,7 +36,7 @@ class loop_at_target_frequency(object):
         target_frequency    the target frequency at which the
                             function should be executed
     """
-    def __init__(self, service, target_frequency ):
+    def __init__(self, service, target_frequency):
         self.service = service
         self.target_frequency = target_frequency
 
@@ -62,5 +65,5 @@ class loop_at_target_frequency(object):
                     sleep_for = target_period - since_last - SLEEP_PENALTY
                     if sleep_for > 0:
                         time.sleep(sleep_for)
-        return wrapped_f
+        return decorator(wrapped_f, f)
 
