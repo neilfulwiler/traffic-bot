@@ -10,22 +10,26 @@ import time
 import sys
 import utils
 import threading
+from backend import InMemoryBackend
 
-variations = defaultdict(set)
+#variations = defaultdict(set)
 
 STATS_COLLECTION_EVERY_N_SECONDS = 10
 
+backend = InMemoryBackend()
+
 @route('/log/<variation>/<user>')
 def log(variation, user):
-    variations[variation].add(int(user))
+    backend.log(variation, user)
 
 @route('/results/<variation>')
 def results(variation):
-    return {'results' : list(variations[variation])}
+    return {'results' : list(backend.results(variation))}
 
 @route('/clear')
 def clear():
-    variations.clear()
+    global backend
+    backend = InMemoryBackend()
 
 def usage(msg=None):
     if msg is not None:
@@ -49,7 +53,7 @@ def main(args):
 
     @utils.loop_at_target_frequency(stats_service, lambda: 1. / STATS_COLLECTION_EVERY_N_SECONDS)
     def collect_stats():
-        print 'variation lengths: %s' % sorted([len(v) for v in variations.values()])
+        print 'variation lengths: %s' % sorted([len(v) for v in backend.variations.values()])
 
     thread = threading.Thread(target=collect_stats)
     thread.start()

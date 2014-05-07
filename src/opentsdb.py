@@ -26,6 +26,12 @@ class ConsoleMonitor(object):
 
         metrics[metric_name] = self
 
+    def get_call_frequency(self):
+        return self.call_frequency.current_value()
+
+    def get_execution_time(self):
+        return self.execution_time.current_value()
+
     def __call__(self, f):
         def wrapped_f(*args, **kwargs):
             if self.last_executed is not None:
@@ -48,5 +54,5 @@ class ConsoleMonitor(object):
             self.last_reported_time = time.time()
             print 'metric %s frequency %.3f execution_time %.3f' % \
                 (self.metric_name,
-                        self.call_frequency.current_value(),
-                        self.execution_time.current_value())
+                        self.get_call_frequency(),
+                        self.get_execution_time())

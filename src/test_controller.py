@@ -1,7 +1,7 @@
 import unittest
-import traffic.controller # the module under test
-from api.backend import MockBackendApi
-from monitoring import opentsdb
+import controller # the module under test
+from backend import MockBackend
+import opentsdb
 
 import time
 
@@ -15,9 +15,9 @@ class TestController(unittest.TestCase):
                 'writes_percent_unique' : 1234
                 }
 
-        api = MockBackendApi()
+        api = MockBackend()
 
-        traffic_controller = traffic.controller.TrafficController(opentsdb.ConsoleMonitor)
+        traffic_controller = controller.TrafficController(opentsdb.ConsoleMonitor)
         traffic_controller.set_rps(0)
         traffic_controller.set_wps(0)
         traffic_controller.set_api(api)
@@ -37,9 +37,9 @@ class TestController(unittest.TestCase):
                 'writes_percent_unique' : 1234
                 }
 
-        api = MockBackendApi()
+        api = MockBackend()
 
-        traffic_controller = traffic.controller.TrafficController(opentsdb.ConsoleMonitor)
+        traffic_controller = controller.TrafficController(opentsdb.ConsoleMonitor)
         traffic_controller.set_rps(0)
         traffic_controller.set_wps(100)
         traffic_controller.set_api(api)

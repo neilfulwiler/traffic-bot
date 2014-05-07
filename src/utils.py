@@ -3,6 +3,22 @@ import time
 SLEEP_PENALTY = .0001 # penalty in second for sleeping / context switching, etc.
 UPDATE_EVERY_N_SECONDS = 2
 
+class safe(object):
+    """
+    a decorator for keeping a function from
+    raising an exception to its caller
+    """
+    def __init__(self, function_description):
+        self.function_description = function_description
+
+    def __call__(self, f):
+        def wrapped_f(*args, **kwargs):
+            try:
+                f(*args, **kwargs)
+            except Exception as e:
+                print 'ERROR [%s]: %s' % (self.function_description, e)
+        return wrapped_f
+
 class loop_at_target_frequency(object):
     """
     a decorator for executing a function in a loop at
