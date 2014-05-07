@@ -9,28 +9,42 @@ from utils import loop_at_target_frequency
 # at some point we probably want to transition
 # all of these into traffic.yaml
 VARIATIONS_PER_EXPERIMENT = 10
+WRITES_PERCENT_UNIQUE = .1
 
 class TrafficController(object):
-    def __init__(self,
-            rps=10, # reads per second
-            wps=100, # writes per second
-            writes_percent_unique=.1,
-            api=None,
-            monitor=None):
-
-        assert api is not None
-        assert monitor is not None
-
-        self.variations = range(VARIATIONS_PER_EXPERIMENT)
+    def __init__(self, monitor):
         self.users = set(range(1000)) # just seed with some users
-        self.api = api
         self.running = True
+        self.monitor = monitor
 
-        @loop_at_target_frequency(self, wps)
-        @monitor('write')
+        self.wps = self.rps = self.api = None
+
+    def get_wps(self):
+        return self.wps
+
+    def get_rps(self):
+        return self.rps
+
+    def set_wps(self, wps):
+        self.wps = wps
+
+    def set_rps(self, rps):
+        self.rps = rps
+
+    def set_api(self, api):
+        self.api = api
+
+
+    def start(self):
+        assert None not in [self.api, self.rps, self.wps]
+
+        variations = range(VARIATIONS_PER_EXPERIMENT)
+
+        @loop_at_target_frequency(self, self.get_wps)
+        @self.monitor('write')
         def write():
-            variation = random.choice(self.variations)
-            new_user = random.random() < writes_percent_unique
+            variation = random.choice(variations)
+            new_user = random.random() < WRITES_PERCENT_UNIQUE
 
             if new_user:
                 user = random.randint(0, 10 ** 10)
@@ -38,20 +52,23 @@ class TrafficController(object):
             else:
                 user = random.choice(list(self.users))
 
-            self.api.log(variation, user)
-        self.write = write
+            try:
+                self.api.log(variation, user)
+            except Exception as e:
+                print '[ERROR]' * 3, 'caught exception trying to write: %s' % e, '[ERROR]' * 3
 
-        @loop_at_target_frequency(self, rps)
-        @monitor('read')
+        @loop_at_target_frequency(self, self.get_rps)
+        @self.monitor('read')
         def read():
-            variation = random.choice(self.variations)
-            self.api.results(variation)
-        self.read = read
+            variation = random.choice(variations)
+            try:
+                self.api.results(variation)
+            except Exception as e:
+                print '[ERROR]' * 3, 'caught exception trying to read: %s' % e, '[ERROR]' * 3
 
-    def start(self):
         def run():
-            read_thread = threading.Thread(target=self.read)
-            write_thread = threading.Thread(target=self.write)
+            read_thread = threading.Thread(target=read)
+            write_thread = threading.Thread(target=write)
 
             read_thread.start()
             write_thread.start()

@@ -47,7 +47,7 @@ def main(args):
 
     stats_service = StatsService()
 
-    @utils.loop_at_target_frequency(stats_service, 1. / STATS_COLLECTION_EVERY_N_SECONDS)
+    @utils.loop_at_target_frequency(stats_service, lambda: 1. / STATS_COLLECTION_EVERY_N_SECONDS)
     def collect_stats():
         print 'variation lengths: %s' % sorted([len(v) for v in variations.values()])
 

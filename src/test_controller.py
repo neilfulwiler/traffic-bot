@@ -17,8 +17,10 @@ class TestController(unittest.TestCase):
 
         api = MockBackendApi()
 
-        traffic_controller = traffic.controller.TrafficController(
-                rps=0, wps=100, writes_percent_unique=1.0, api=api, monitor=opentsdb.ConsoleMonitor)
+        traffic_controller = traffic.controller.TrafficController(opentsdb.ConsoleMonitor)
+        traffic_controller.set_rps(0)
+        traffic_controller.set_wps(0)
+        traffic_controller.set_api(api)
         traffic_controller.start()
 
         start = time.time()
@@ -37,8 +39,10 @@ class TestController(unittest.TestCase):
 
         api = MockBackendApi()
 
-        traffic_controller = traffic.controller.TrafficController(
-                rps=0, wps=100, writes_percent_unique=1.0, api=api, monitor=opentsdb.ConsoleMonitor)
+        traffic_controller = traffic.controller.TrafficController(opentsdb.ConsoleMonitor)
+        traffic_controller.set_rps(0)
+        traffic_controller.set_wps(100)
+        traffic_controller.set_api(api)
         traffic_controller.start()
 
         time.sleep(3)

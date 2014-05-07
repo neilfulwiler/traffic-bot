@@ -2,9 +2,8 @@ import requests
 from collections import defaultdict
 
 class BackendApi(object):
-    def __init__(self, host, port):
+    def __init__(self, host):
         self.host = host
-        self.port = port
 
     def log(self, variation, user):
         self._rest('log/%d/%s' % (variation, user))
@@ -13,18 +12,17 @@ class BackendApi(object):
         return self._rest('results/%d' % variation).json()['results']
 
     def _rest(self, path):
-        return requests.get('http://%s:%d/%s' % (self.host, self.port, path))
+        return requests.get('http://%s/%s' % (self.host, path))
 
 class VerifiedBackendApi(object):
     """
-    you must either provide a base_api or a host/port
+    you must either provide a base_api or a host
     in which case the default backend api will be assumed
     """
-    def __init__(self, host=None, port=None, base_api=None):
+    def __init__(self, host=None, base_api=None):
         if base_api is None:
             assert host is not None
-            assert port is not None
-            self.base_api = BackendApi(host, port)
+            self.base_api = BackendApi(host)
         else:
             self.base_api = base_api
 

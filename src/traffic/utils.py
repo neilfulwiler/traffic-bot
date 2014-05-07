@@ -1,6 +1,7 @@
 import time
 
 SLEEP_PENALTY = .0001 # penalty in second for sleeping / context switching, etc.
+UPDATE_EVERY_N_SECONDS = 2
 
 class loop_at_target_frequency(object):
     """
@@ -16,18 +17,26 @@ class loop_at_target_frequency(object):
         target_frequency    the target frequency at which the
                             function should be executed
     """
-    def __init__(self, service, target_frequency):
+    def __init__(self, service, target_frequency ):
         self.service = service
         self.target_frequency = target_frequency
 
     def __call__(self, f):
         def wrapped_f(*args, **kwargs):
-            if self.target_frequency == 0:
-                return
-
-            target_period = 1. / self.target_frequency
             last = 0
+            last_updated_time = 0
             while self.service.running:
+
+                # special case for if the frequency is 0
+                if self.target_frequency() == 0:
+                    time.sleep(UPDATE_EVERY_N_SECONDS)
+                    continue
+
+                now = time.time()
+                if now - last_updated_time > UPDATE_EVERY_N_SECONDS:
+                    last_updated_time = now
+                    target_period = 1. / self.target_frequency()
+
                 now = time.time()
                 since_last = now - last
                 if since_last > target_period:
